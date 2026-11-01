@@ -31,19 +31,17 @@ export function classCube(id: number) {
 
 const pole = `<rect x="54" y="78" width="7" height="30" fill="${STATION_COLOR}" stroke="rgba(0,0,0,.3)"/>`;
 
-const PRINCIPLES = [
-  ["Walk", "Safe, lively streets for walking"],
-  ["Cycle", "A safe cycle network and parking"],
-  ["Connect", "Short blocks and direct routes"],
-  ["Transit", "Good public transport within walking distance"],
-  ["Mix", "Homes, shops and services close together"],
-  ["Densify", "Enough people and jobs near stations"],
-  ["Compact", "Build in and next to the existing city"],
-  ["Shift", "Less space for cars, more for people"],
+/** The eight TOD Standard principles; the game scores six of them (`points` is their maximum in the game). */
+const PRINCIPLES: { name: string; text: string; points?: string; how: string }[] = [
+  { name: "Walk", text: "Safe, lively streets for walking", how: "Not scored in this game: sidewalks and crossings are mapped too unevenly across Europe to measure fairly." },
+  { name: "Cycle", text: "A safe cycle network and parking", how: "Not scored in this game: cycle lanes and bike parking are mapped too unevenly across Europe to measure fairly." },
+  { name: "Connect", text: "Short blocks and direct routes", points: "10 points", how: "Full points when 90% of the block sides within a 1 km walk of the station are shorter than 110 m, 2 points up to 190 m. Policies do not change streets, so this depends on where the station is: place a new station in step 4 in an area of short, well-connected streets." },
+  { name: "Transit", text: "Good public transport within walking distance", points: "must pass", how: "At least 80% of residents need a train, metro or rapid-bus station within a 1000 m walk, or a bus or tram stop within 500 m. It earns no points, but every TOD has to pass it. Add stations in step 4 where people live." },
+  { name: "Mix", text: "Homes, shops and services close together", points: "4 points", how: "1 point each for fresh food within 500 m, a school within 1000 m and health care within 1000 m, when 80% of the buildings near the station reach them. 1 more for a park or playground within 500 m: Retrofitting and Balanced add parks and green streets near transit." },
+  { name: "Densify", text: "Enough people and jobs near stations", points: "15 points", how: "Up to 8 points for residents within a 1 km walk of the station, full at 150 per hectare: Intense Building and Balanced build up homes near transit. 7 more when the station area has more shops and offices than the city, most of them within 500 m: turning shops into homes (Retrofitting) can cost these." },
+  { name: "Compact", text: "Build in and next to the existing city", points: "10 points", how: "Up to 8 points when most of the buildable land within a 1 km walk of the station is already built (full above 90%): a station in the built-up city scores higher than one at its edge. 2 more for a bike-share station within 1 km, or 1 for bus or tram stops." },
+  { name: "Shift", text: "Less space for cars, more for people", points: "6 points", how: "Full points when roads cover 15% or less of the land within a 1 km walk of the station, 3 points up to 20%. Retrofitting and Balanced turn roads near transit into green streets, and in Custom you set the share." },
 ];
-/** Principles the thesis studied, and the ones the game scores on top with free, Europe-wide open data. */
-const THESIS = new Set(["Transit", "Densify", "Compact", "Shift"]);
-const ADDED = new Set(["Connect", "Mix"]);
 
 interface Slide {
   title: string;
@@ -70,9 +68,9 @@ const SLIDES: Slide[] = [
   },
   {
     title: "Eight principles",
-    body: "The TOD Standard (ITDP, 2017) judges station areas on eight principles. The thesis that inspired this game studied four of them (yellow). The game also scores Connect and Mix (green), using the metrics that free, Europe-wide open data measures reliably: 45 of the 100 points in all. Walk and Cycle (grey) are left out, because sidewalks, crossings and bike parking are mapped too unevenly.",
-    visual: `<div class="principles">${PRINCIPLES.map(([name, text]) => `<div class="${THESIS.has(name) ? "on" : ADDED.has(name) ? "added" : ""}"><b>${name}</b><span>${text}</span></div>`).join("")}</div>
-      <p class="principles-key"><span class="on">Studied in the thesis and scored</span><span class="added">Also scored by the game</span><span>Not scored</span></p>`,
+    body: "The TOD Standard (ITDP, 2017) judges station areas on eight principles. The thesis that inspired this game studied four of them; the game scores six, marked in yellow, using what free, Europe-wide open data measures reliably: 45 of the 100 points. Tap a principle to see how to score it.",
+    visual: `<div class="principles">${PRINCIPLES.map((p, k) => `<button data-principle="${k}" class="${p.points ? "on" : ""}"><b>${p.name}</b><span>${p.text}</span></button>`).join("")}</div>
+      <div class="principle-tip" aria-live="polite">Tap a principle to see how it is scored in the game.</div>`,
   },
   {
     title: "Reading the cube city",
@@ -146,6 +144,14 @@ export function renderAbout(container: HTMLElement, onStart: () => void) {
     container.querySelector<HTMLButtonElement>("[data-prev]")!.disabled = index === 0;
     container.querySelector<HTMLButtonElement>("[data-next]")!.style.visibility = index === SLIDES.length - 1 ? "hidden" : "visible";
     slide.querySelector<HTMLButtonElement>("[data-start]")?.addEventListener("click", onStart);
+    // Each principle opens how the game scores it.
+    slide.querySelectorAll<HTMLButtonElement>("[data-principle]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const p = PRINCIPLES[Number(b.dataset.principle)];
+        slide.querySelectorAll("[data-principle]").forEach((o) => o.classList.toggle("sel", o === b));
+        slide.querySelector(".principle-tip")!.innerHTML = `<b>${p.name}</b>${p.points ? ` <span class="pts">${p.points}</span>` : ` <span class="pts off">not scored</span>`}<p>${p.how}</p>`;
+      }),
+    );
     // A strategy picture opens its labelled version; the back button returns to the grid.
     slide.querySelectorAll<HTMLButtonElement>("[data-zoom]").forEach((b) =>
       b.addEventListener("click", () => {

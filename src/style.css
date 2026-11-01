@@ -625,9 +625,26 @@ footer { font-size: 12px; color: var(--muted); padding: 12px 20px; border-top: 3
   .deck-nav { position: sticky; bottom: 0; z-index: 2; background: var(--bg); padding: 8px 0 10px; }
 }
 
-/* Slide 3: what the thesis studied (yellow), what the game adds (green), what is left out (grey). */
-.principles div.added { background: #dff1cf; border-color: var(--grass-dark); }
-.principles-key { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; font-size: 12px; color: var(--muted); }
-.principles-key span::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 5px; border-radius: 3px; border: 2px solid var(--line); vertical-align: -1px; }
-.principles-key span.on::before { background: var(--sun); border-color: var(--ink); }
-.principles-key span.added::before { background: #dff1cf; border-color: var(--grass-dark); }
+/* Slide 3: the six scored principles in yellow; each one opens how the game scores it. */
+.principles button { font: inherit; color: inherit; text-align: left; cursor: pointer; background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 4px; align-content: start; }
+.principles button.on { background: var(--sun); border-color: var(--ink); }
+.principles button.sel { box-shadow: 0 0 0 3px var(--ink); }
+.principles button b { font: 600 17px var(--font-head); }
+.principles button span { font-size: 13px; }
+.principle-tip { margin-top: 10px; padding: 10px 12px; border: 2px dashed var(--line); border-radius: 12px; font-size: 13px; color: var(--muted); min-height: 5.5em; }
+.principle-tip b { color: var(--ink); font: 600 15px var(--font-head); }
+.principle-tip .pts { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--sun); color: var(--ink); }
+.principle-tip .pts.off { background: var(--bg); color: var(--muted); }
+.principle-tip p { margin: 4px 0 0; color: var(--ink); line-height: 1.45; }
+.slide-visual:has(.principles) { display: block; width: 100%; }
+.slide-visual .principles { width: 100%; }
+
+@media (max-width: 760px) {
+  /* Every slide has the same size on a phone; a long one scrolls inside its card. */
+  .slide { height: calc(100svh - 190px); min-height: 420px; overflow-y: auto; align-content: start; }
+  /* Names only in the boxes; the tip below says the rest. */
+  .principles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .principles button { padding: 8px 4px; text-align: center; }
+  .principles button b { font-size: 14px; }
+  .principles button span { display: none; }
+}
