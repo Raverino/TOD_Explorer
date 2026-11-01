@@ -252,8 +252,6 @@ $("next-step").addEventListener("click", () => {
   const step = activeStep();
   if (step === 4) return showResults();
   setStep(step + 1);
-  // The policy step opens by growing the city.
-  if (step === 2 && year === START_YEAR) play(true);
 });
 $("zoom-in").addEventListener("click", () => city.zoomBy(1.3));
 $("zoom-out").addEventListener("click", () => city.zoomBy(1 / 1.3));
@@ -328,7 +326,6 @@ function renderStrategyCards() {
   document.querySelectorAll<HTMLButtonElement>("[data-strategy]").forEach((b) =>
     b.addEventListener("click", () => {
       selectStrategy(b.dataset.strategy!);
-      play(true);
     }),
   );
 }

@@ -41,8 +41,9 @@ const PRINCIPLES = [
   ["Compact", "Build in and next to the existing city"],
   ["Shift", "Less space for cars, more for people"],
 ];
-/** Principles the game scores with free, Europe-wide open data. */
-const SCORED = new Set(["Connect", "Transit", "Mix", "Densify", "Compact", "Shift"]);
+/** Principles the thesis studied, and the ones the game scores on top with free, Europe-wide open data. */
+const THESIS = new Set(["Transit", "Densify", "Compact", "Shift"]);
+const ADDED = new Set(["Connect", "Mix"]);
 
 interface Slide {
   title: string;
@@ -69,8 +70,9 @@ const SLIDES: Slide[] = [
   },
   {
     title: "Eight principles",
-    body: "The TOD Standard (ITDP, 2017) judges station areas on eight principles. This game scores the six marked in yellow, with the metrics that free, Europe-wide open data measures reliably (45 of the 100 points). Walk and Cycle are left out: sidewalks, crossings and bike parking are mapped too unevenly. The thesis that inspired the game studied four of them: Transit, Densify, Compact and Shift.",
-    visual: `<div class="principles">${PRINCIPLES.map(([name, text]) => `<div class="${SCORED.has(name) ? "on" : ""}"><b>${name}</b><span>${text}</span></div>`).join("")}</div>`,
+    body: "The TOD Standard (ITDP, 2017) judges station areas on eight principles. The thesis that inspired this game studied four of them (yellow). The game also scores Connect and Mix (green), using the metrics that free, Europe-wide open data measures reliably: 45 of the 100 points in all. Walk and Cycle (grey) are left out, because sidewalks, crossings and bike parking are mapped too unevenly.",
+    visual: `<div class="principles">${PRINCIPLES.map(([name, text]) => `<div class="${THESIS.has(name) ? "on" : ADDED.has(name) ? "added" : ""}"><b>${name}</b><span>${text}</span></div>`).join("")}</div>
+      <p class="principles-key"><span class="on">Studied in the thesis and scored</span><span class="added">Also scored by the game</span><span>Not scored</span></p>`,
   },
   {
     title: "Reading the cube city",

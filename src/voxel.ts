@@ -86,8 +86,9 @@ export class CubeCity {
   private labelLayer = document.createElement("div");
   private pinTops = new Map<number, THREE.Vector3>();
   private pinLabels: { cell: number; el: HTMLElement }[] = [];
-  private touchHint = document.createElement("div");
-  private touchHintTimer = 0;
+  /** Fingers on the city now, and whether this touch gesture has used two of them. */
+  private touches = 0;
+  private multiTouch = false;
 
   constructor(private container: HTMLElement, private onHover: (cell: number | null, x: number, y: number) => void) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -102,22 +103,10 @@ export class CubeCity {
     this.controls.screenSpacePanning = false;
     // Drag turns the city; double-click and drag (or right-drag, Shift + drag) moves it.
     this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-    // On touch screens one finger scrolls the page, as anywhere else; two fingers move and pinch-zoom the
-    // city, and the ↺ ↻ buttons turn it.
-    this.controls.touches = { ONE: null, TWO: THREE.TOUCH.DOLLY_PAN };
+    // On touch screens one finger turns the city; two fingers move and pinch-zoom it.
+    this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     this.controls.minZoom = 0.5;
     this.controls.maxZoom = 12;
-    this.renderer.domElement.style.touchAction = "pan-y";
-    this.touchHint.className = "touch-hint";
-    this.touchHint.textContent = "Use two fingers to move the city";
-    container.appendChild(this.touchHint);
-    this.renderer.domElement.addEventListener("pointercancel", (e) => {
-      // The browser took a one-finger swipe to scroll the page: say how to move the city instead.
-      if (e.pointerType !== "touch") return;
-      this.touchHint.classList.add("on");
-      clearTimeout(this.touchHintTimer);
-      this.touchHintTimer = window.setTimeout(() => this.touchHint.classList.remove("on"), 1500);
-    });
     // A press that follows a click within a moment is the second half of a double click: that drag
     // moves the city. Registered for the capture phase so it runs before the controls see the press.
     let lastUp = 0, lastUpAt: [number, number] = [0, 0];
@@ -148,16 +137,33 @@ export class CubeCity {
       { passive: false },
     );
     this.observer.observe(container);
-    this.renderer.domElement.addEventListener("pointermove", (e) => this.hover(e));
-    this.renderer.domElement.addEventListener("pointerleave", () => this.onHover(null, 0, 0));
-    this.renderer.domElement.addEventListener("pointerdown", (e) => (this.downAt = [e.clientX, e.clientY]));
+    // A mouse shows a cell's details on hover. A finger shows them only on a tap, so turning, moving
+    // or zooming the city does not keep opening them.
+    this.renderer.domElement.addEventListener("pointermove", (e) => e.pointerType !== "touch" && this.hover(e));
+    this.renderer.domElement.addEventListener("pointerleave", (e) => e.pointerType !== "touch" && this.onHover(null, 0, 0));
+    this.renderer.domElement.addEventListener("pointerdown", (e) => {
+      this.downAt = [e.clientX, e.clientY];
+      if (e.pointerType !== "touch") return;
+      if (++this.touches > 1) this.multiTouch = true;
+      this.onHover(null, 0, 0);
+    });
+    const touchEnd = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return false;
+      this.touches = Math.max(0, this.touches - 1);
+      const multi = this.multiTouch;
+      if (!this.touches) this.multiTouch = false;
+      return multi;
+    };
+    this.renderer.domElement.addEventListener("pointercancel", touchEnd);
     this.renderer.domElement.addEventListener("pointerup", (e) => {
       const d = this.downAt;
       this.downAt = undefined;
+      const multi = touchEnd(e);
       // A click moves the pointer a few pixels at most; anything more was a drag to turn the city.
-      if (!this.onPick || !d || e.button !== 0 || Math.hypot(e.clientX - d[0], e.clientY - d[1]) > 5) return;
-      const cell = this.cellAt(e);
-      if (cell !== null) this.onPick(cell);
+      if (multi || !d || e.button !== 0 || Math.hypot(e.clientX - d[0], e.clientY - d[1]) > 5) return;
+      if (e.pointerType === "touch") this.hover(e);
+      const cell = this.onPick ? this.cellAt(e) : null;
+      if (cell !== null) this.onPick!(cell);
     });
     this.renderer.setAnimationLoop(() => {
       this.controls.update();
@@ -173,7 +179,6 @@ export class CubeCity {
     this.container = container;
     container.appendChild(this.renderer.domElement);
     container.appendChild(this.labelLayer);
-    container.appendChild(this.touchHint);
     this.observer.observe(container);
     this.fit();
   }

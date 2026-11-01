@@ -94,7 +94,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
             <button data-reset>Reset</button>
           </div>
         </div>
-        <p class="viewer-hint"><span class="mouse-only">Drag to turn the city, double-click and drag to move it, Ctrl + scroll or the buttons to zoom.</span><span class="touch-only">Two fingers move and zoom the city; ↺ ↻ turn it.</span> The share image and the PDF use this view.</p>
+        <p class="viewer-hint"><span class="mouse-only">Drag to turn the city, double-click and drag to move it, Ctrl + scroll or the buttons to zoom.</span><span class="touch-only">One finger turns the city, two fingers move and zoom it.</span> The share image and the PDF use this view.</p>
       </div>
 
       <div class="report-cards">
