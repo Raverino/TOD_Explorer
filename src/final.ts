@@ -59,6 +59,9 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Where the game lives, printed on the PDF and the share image so people can find it. */
+const APP_URL = "raverino.github.io/TOD_Explorer";
+
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 /** Renders the results page into `root`; `onBack` returns to the city. */
@@ -112,7 +115,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
         </div>
       </section>
 
-      <section>
+      <section class="report-questions">
         <h2>Questions to explore</h2>
         <div class="questions">
           ${data.questions.map((q) => `<details><summary>${esc(q.q)}</summary><p>${esc(q.a)} ${cite(q.cite)}</p></details>`).join("")}
@@ -139,7 +142,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
       <footer class="report-foot">
         Indicative only: a what-if from open data, not a forecast. Based on Dimas (2025), Modeling Transit-Oriented Development,
         University of Twente (https://purl.utwente.nl/essays/108255). Map data © OpenStreetMap contributors; population EU Census 2021 grid (© European Union) and GHS-POP R2023A (European Commission JRC).
-        Made with TOD Explorer on ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.
+        Made with TOD Explorer (${APP_URL}) on ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.
       </footer>
     </article>
     <section class="final-share">
@@ -206,7 +209,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
   out.querySelector("[data-native-share]")!.addEventListener("click", () => {
     if (!blob) return;
     const file = new File([blob], "city-of-the-future.png", { type: "image/png" });
-    navigator.share({ files: [file], title: "The city of the future", text: `${place()} in ${data.year} with ${data.strategy}. #CityOfTheFuture #TOD` }).catch(() => {});
+    navigator.share({ files: [file], title: "The city of the future", text: `${place()} in ${data.year} with ${data.strategy}. Try it: https://${APP_URL}/ #CityOfTheFuture #TOD` }).catch(() => {});
   });
 }
 
@@ -314,13 +317,15 @@ async function shareImage(d: FinalData, snapshot: string, legend: [string, strin
   });
 
   g.fillStyle = muted;
-  g.font = body(20);
-  g.fillText(`Compared with ${d.compareLabel}. Indicative, from open data.`, 60, H - 62);
-  g.fillText("Made with TOD Explorer · based on Dimas (2025), University of Twente", 60, H - 32);
+  g.font = body(19);
+  g.fillText(`Compared with ${d.compareLabel}. Indicative, from open data.`, 60, H - 84);
+  g.fillText("Based on Dimas (2025), University of Twente", 60, H - 58);
   g.fillStyle = ink;
+  g.font = body(24, 700);
+  g.fillText(`Try it: ${APP_URL}`, 60, H - 24);
   g.font = body(22, 600);
   const hash = "#CityOfTheFuture";
-  g.fillText(hash, W - 60 - g.measureText(hash).width, H - 32);
+  g.fillText(hash, W - 60 - g.measureText(hash).width, H - 24);
 
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b!), "image/png"));
 }

@@ -44,6 +44,9 @@ const PRINCIPLES: { name: string; text: string; scored: boolean; how: string }[]
   { name: "Shift", text: "Less space for cars, more for people", scored: true, how: "This scores up to 6 points. Less land for roads leaves more room for people. Retrofitting and Balanced turn roads near transit into green streets, and in Custom you choose how many." },
 ];
 
+/** A map marker for picking a place. */
+const placeIcon = `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 50 L24 42 L40 50 L56 42 L56 58 L40 62 L24 56 L8 62 Z" fill="#d6e49a" stroke="#23262f" stroke-width="2"/><path d="M32 46 C22 34 18 28 18 21 a14 14 0 0 1 28 0 c0 7 -4 13 -14 25 Z" fill="#5bb3e8" stroke="#23262f" stroke-width="2"/><circle cx="32" cy="21" r="5" fill="#fff" stroke="#23262f" stroke-width="2"/></svg>`;
+
 /** A small bar chart for the results step. */
 const bars = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="30" width="12" height="26" fill="#d9534f" stroke="#23262f" stroke-width="2"/><rect x="26" y="18" width="12" height="38" fill="#f5c542" stroke="#23262f" stroke-width="2"/><rect x="44" y="8" width="12" height="48" fill="#6cbf3c" stroke="#23262f" stroke-width="2"/></svg>`;
 
@@ -112,15 +115,16 @@ const SLIDES: Slide[] = [
   },
   {
     title: "Growing to 2050",
-    body: "After you pick a place, the game grows it to 2050 in four steps. Each year the newcomers need homes, and the policy decides where they go: near stations first, then on new land. It is a what-if, not a forecast.",
+    body: "The game has five steps. Each year to 2050 the newcomers need homes, and the policy decides where they go: near stations first, then on new land. It is a what-if, not a forecast.",
     visual: `<div class="game-flow">
-      <div class="f2">${people("#f5c542")}<p><b>2</b><strong>Growth and land</strong><span>How many newcomers by 2050, and how much new land the city may use</span></p></div><i class="fa2">→</i>
-      <div class="f3"><span class="mini">${cubeStack(c[1].ground, c[1].block, c[1].roof, 4)}</span><p><b>3</b><strong>Choose a policy</strong><span>Press Play: each year homes go near stations first, then on new land</span></p></div><i class="fa3">→</i>
-      <div class="f4">${PIN_ICON}<p><b>4</b><strong>New transit</strong><span>Add stations: new homes gather around them</span></p></div><i class="fa4">→</i>
+      <div class="f1">${placeIcon}<p><b>1</b><strong>Pick a place</strong><span>Any place in Europe where you want to see what TOD policies would do</span></p></div><i class="fa1">↓</i>
+      <div class="f2">${people("#f5c542")}<p><b>2</b><strong>Growth and land</strong><span>How many newcomers by 2050, and how much new land the city may use</span></p></div><i class="fa2">↓</i>
+      <div class="f3"><span class="mini">${cubeStack(c[1].ground, c[1].block, c[1].roof, 4)}</span><p><b>3</b><strong>Choose a policy</strong><span>Press Play: each year homes go near stations first, then on new land</span></p></div><i class="fa3">↓</i>
+      <div class="f4">${PIN_ICON}<p><b>4</b><strong>New transit</strong><span>Add new stations if needed, for example where the city will grow</span></p></div><i class="fa4">↓</i>
       <div class="f5">${bars}<p><b>5</b><strong>Results</strong><span>Compare CO₂, homes and the TOD score with Baseline</span></p></div>
       <div class="back" aria-hidden="true"></div>
     </div>
-    <p class="back-note">↩ From step 4, go back to change the growth or try another policy.</p>`,
+    <p class="back-note">↩ From step 4, go back: your new stations stay, and TOD growth moves towards them. Try more growth, more land or another policy.</p>`,
   },
   {
     title: "Your scores",
