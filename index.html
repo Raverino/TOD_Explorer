@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TOD Explorer</title>
+    <meta name="description" content="Turn any place into a cube city and test Transit-Oriented Development strategies. Based on Dimas (2025), University of Twente." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand"><span class="logo" aria-hidden="true"></span><span class="brand-text">TOD Explorer<small title="Transit-oriented development, scored on the TOD Standard metrics free European open data measures reliably">land use and transit</small></span></div>
+      <ol class="steps" id="steps">
+        <li data-step="1" class="active">Pick a place</li>
+        <li data-step="2">Growth and land</li>
+        <li data-step="3">Choose a policy</li>
+        <li data-step="4">New transit</li>
+        <li data-step="5">Results</li>
+      </ol>
+      <button id="about-btn" class="btn about-btn">How it works</button>
+    </header>
+
+    <main>
+      <section id="about" class="screen hidden" tabindex="-1"></section>
+
+      <section id="pick" class="screen">
+        <div id="map"></div>
+        <aside class="panel">
+          <h1>Pick a place</h1>
+          <p class="small">New here? <a href="#" id="about-link">See how it works</a> in eight short slides.</p>
+          <p class="muted">Search a city, then drag the map to frame the area you want to turn into cubes.</p>
+          <form id="search" class="row">
+            <input id="q" type="search" placeholder="Utrecht, Netherlands" autocomplete="off" />
+            <button type="submit" class="btn">Search</button>
+          </form>
+          <p id="search-msg" class="msg"></p>
+          <label class="field">
+            <span>Area size <b id="size-out">4 km</b></span>
+            <input id="size" type="range" min="1" max="20" step="1" value="4" />
+          </label>
+          <p class="muted small" id="grid-out"></p>
+          <button id="build" class="btn primary big">Build cube city</button>
+          <p class="muted small">Map, height and population data are downloaded free for the area you frame. Bigger areas take longer: start with 3–6 km.</p>
+        </aside>
+      </section>
+
+      <section id="city" class="screen hidden">
+        <div class="stage">
+          <div id="three"></div>
+          <div class="stage-ui">
+            <button id="back" class="btn">← New place</button>
+            <div class="seg" role="group" aria-label="Map overlay">
+              <button data-overlay="none" class="on">Land use</button>
+              <button data-overlay="tod">TOD standard</button>
+              <button data-overlay="zoning">Protected</button>
+              <button data-overlay="changes">Changes</button>
+            </div>
+            <div class="seg" role="group" aria-label="Zoom">
+              <button id="zoom-in" aria-label="Zoom in">+</button>
+              <button id="zoom-out" aria-label="Zoom out">−</button>
+            </div>
+            <span id="wheel-hint" class="hint">Drag to turn · double-click and drag to move · Ctrl + scroll to zoom</span>
+          </div>
+          <div id="hud" class="hud" aria-live="polite"></div>
+          <div id="tip" class="tip hidden"></div>
+          <div id="legend" class="legend"></div>
+        </div>
+
+        <div class="side">
+        <section class="strategy growth panel-step" data-panel="2">
+          <div class="strategy-head">
+            <span class="kicker">Step 2 of 5</span>
+            <h2>How will the city grow?</h2>
+            <p class="muted"><b>A possible future, not a forecast.</b> First decide how many people will live here by 2050, and whether the city may build on new land at its edge. In the next step a policy decides where the new homes go.</p>
+          </div>
+          <div class="growth-controls">
+            <span class="field-label">New residents by 2050</span>
+            <div id="demand" class="seg" role="group" aria-label="Population change"></div>
+            <label class="field share">
+              <span>Population change by 2050 <b id="share-out">0%</b></span>
+              <input id="share" type="range" min="-25" max="40" step="1" value="0" />
+            </label>
+          </div>
+          <div class="growth-controls">
+            <span class="field-label">New land for building</span>
+            <div id="land" class="seg" role="group" aria-label="New land allowed"></div>
+            <label class="field share">
+              <span>New urban land allowed by 2050 <b id="land-out">0%</b></span>
+              <input id="land-share" type="range" min="0" max="40" step="1" value="0" />
+            </label>
+          </div>
+          <p id="growth-summary" class="summary"></p>
+        </section>
+
+        <section class="strategy panel-step hidden" data-panel="3">
+          <div class="strategy-head">
+            <span class="kicker">Step 3 of 5</span>
+            <h2>Choose a policy</h2>
+            <p class="muted">Each year the newcomers need homes. TOD policies build up near transit first and use new land only when that is not enough, keeping parks and protected areas free. Baseline only builds on new land, parks included.</p>
+          </div>
+          <div class="timeline">
+            <button id="play" class="btn primary">▶ Play</button>
+            <input id="year" type="range" min="2025" max="2050" step="1" value="2025" aria-label="Year" />
+            <b id="year-out" class="year">2025</b>
+          </div>
+          <p id="housing-summary" class="summary"></p>
+          <div id="strategies" class="strategy-cards" role="radiogroup" aria-label="Policy"></div>
+          <div id="custom" class="custom hidden">
+            <div class="custom-grid">
+              <label class="field">
+                <span>TOD distance <b id="tod-out">1000 m</b></span>
+                <input id="tod" type="range" min="300" max="1500" step="100" value="1000" />
+                <small class="muted">TOD Standard: 500 m to a bus stop, 1000 m to rail or metro.</small>
+              </label>
+              <label class="field">
+                <span>Clustering <b id="cluster-out">70%</b></span>
+                <input id="cluster" type="range" min="0" max="100" step="5" value="70" />
+                <small class="muted">How often a change joins an existing patch instead of starting a new one (thesis: 70%).</small>
+              </label>
+              <label class="field">
+                <span>Retrofit homes <b id="retrofit-out">0%</b></span>
+                <input id="retrofit" type="range" min="0" max="100" step="5" value="0" />
+                <small class="muted">Share of homes near transit given an energy retrofit by 2050: their building emissions fall by 30% (Shu et al., 2024).</small>
+              </label>
+              <label class="check"><input id="decay" type="checkbox" checked /> Change cells nearest to transit first (TOD decay)</label>
+            </div>
+            <div id="rule-sliders" class="custom-grid"></div>
+          </div>
+          <p id="strategy-summary" class="summary"></p>
+        </section>
+
+        <section class="strategy transit panel-step hidden" data-panel="4">
+          <div class="strategy-head">
+            <span class="kicker">Step 4 of 5 · optional</span>
+            <h2>New transit</h2>
+            <p class="muted"><b>Transit first, homes after.</b> Hong Kong builds the station before the neighbourhood, then homes and shops around it.</p>
+          </div>
+          <div id="transit-how" class="transit-how"></div>
+          <div class="transit-controls">
+            <button id="place-station" class="btn primary">Place stations</button>
+            <span class="or muted small">or</span>
+            <span class="auto-place">
+              <select id="auto-count" aria-label="Number of stations to place">
+                <option value="1">1 station</option><option value="2" selected>2 stations</option><option value="3">3 stations</option><option value="4">4 stations</option><option value="5">5 stations</option>
+              </select>
+              <button id="auto-stations" class="btn">Place them for me</button>
+            </span>
+            <button id="clear-stations" class="btn hidden">Remove all</button>
+          </div>
+          <p id="transit-summary" class="summary"></p>
+          <div id="transit-nudge" class="nudge hidden"></div>
+        </section>
+
+        <div class="score-divider"><span>Station area score · TOD Standard</span></div>
+        <div id="tod-mini" class="tod-mini"></div>
+
+        <nav class="wizard-nav">
+          <button id="prev-step" class="btn">← Back</button>
+          <button id="next-step" class="btn primary">Next →</button>
+        </nav>
+
+        <!-- Rendered with every change and shown on the results page. -->
+        <div id="city-details" class="results hidden">
+          <div id="headlines" class="headlines"></div>
+          <div id="tod-standard" class="tod-standard"></div>
+          <p class="note">Indicative only. Residents are measured (EU Census 2021 where it exists, placed with GHS-POP 2020); land use, floor area and transit come from OpenStreetMap and are only as complete as the map. Read the results as orders of magnitude, not as a forecast.</p>
+          <div id="details" class="details"></div>
+          <details class="refs">
+            <summary>Sources and locked values</summary>
+            <div id="refs"></div>
+          </details>
+        </div>
+        </div>
+      </section>
+
+      <section id="final" class="screen hidden"></section>
+
+      <div id="loading" class="loading hidden">
+        <div class="loader"><div class="cubes"><i></i><i></i><i></i></div><p id="status">Starting…</p></div>
+      </div>
+    </main>
+
+    <footer>
+      Based on <a href="https://doi.org/10.5281/zenodo.16635783" target="_blank" rel="noopener">Dimas (2025), Modeling Transit-Oriented Development</a>, University of Twente.
+      Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL).
+      Elevation: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">AWS Terrain Tiles</a>.
+      Population: <a href="https://human-settlement.emergency.copernicus.eu/ghs_pop2023.php" target="_blank" rel="noopener">GHS-POP R2023A</a>, European Commission JRC (CC BY 4.0), scaled to the <a href="https://ec.europa.eu/eurostat/web/gisco/geodata/population-distribution/population-grids" target="_blank" rel="noopener">EU Census 2021 grid</a> (© European Union).
+      TOD metrics: <a href="https://www.itdp.org/library/standards-and-guides/tod3-0/" target="_blank" rel="noopener">ITDP TOD Standard (2017)</a>.
+      Illustration style after Anastasia Logvinenko (2025).
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
