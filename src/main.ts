@@ -15,7 +15,7 @@ import { livingM2PerPerson, SETTLEMENT, settlementType } from "./housing";
 import { applyCensus, censusBBox } from "./census";
 import { stationNeed, suggestStations } from "./stations";
 import { computeIndicators, computeRanges, Indicators, NET_LIVING_SHARE, PRINCIPLES, Ranges, REFS, residentsByCell } from "./indicators";
-import { CLASSES, CLASS_IDS, STATION_COLOR } from "./classes";
+import { CLASSES, CLASS_IDS, NEW_STATION_COLOR, STATION_COLOR } from "./classes";
 import { CubeCity, Overlay, OVERLAY_COLORS, PIN_ICON } from "./voxel";
 import { applyStrategy, CUSTOM_RULES, PRESETS, Rule, ScenarioResult, Strategy } from "./scenarios";
 import { END_YEAR, GrowthResult, LAND_PRESETS, simulateGrowth, START_YEAR } from "./growth";
@@ -272,22 +272,34 @@ function legendColor(id: number) {
   return c.block ?? c.ground;
 }
 
+/** What each colour means under an overlay, as [colour, label] pairs; shared by the city and the results. */
+function legendItems(mode: Overlay, stations = 0): [string, string][] {
+  const faded: [string, string] = ["#e4e6ea", "Everything else"];
+  switch (mode) {
+    case "none":
+      return [
+        ...CLASS_IDS.map((id) => [legendColor(id), CLASSES[id].short] as [string, string]),
+        [STATION_COLOR, "Transit stop"],
+        ...(stations ? [[NEW_STATION_COLOR, "New station"] as [string, string]] : []),
+      ];
+    case "tod":
+      return [[OVERLAY_COLORS.tod, "Meets the TOD transit standard"], faded];
+    case "zoning":
+      return [[OVERLAY_COLORS.protected, "Protected area: no new building"], faded];
+    case "changes":
+      return [
+        [OVERLAY_COLORS.converted, "New land use from the strategy"],
+        [OVERLAY_COLORS.green, "New urban green from the strategy"],
+        [OVERLAY_COLORS.grown, "New urban land from growth"],
+        [OVERLAY_COLORS.retrofit, "Homes retrofitted"],
+        faded,
+      ];
+  }
+}
+
 /** The legend follows the overlay: land-use classes, or what the highlighted cubes mean. */
 function renderLegend(mode: Overlay) {
-  const item = (color: string, text: string) => `<span><i style="background:${color}"></i>${text}</span>`;
-  const faded = item("#e4e6ea", "Everything else");
-  const legends: Record<Overlay, string> = {
-    none: CLASS_IDS.map((id) => item(legendColor(id), CLASSES[id].short)).join("") + item(STATION_COLOR, "Transit stop"),
-    tod: item(OVERLAY_COLORS.tod, "Meets the TOD transit standard") + faded,
-    zoning: item(OVERLAY_COLORS.protected, "Protected area: no new building") + faded,
-    changes:
-      item(OVERLAY_COLORS.converted, "New land use from the strategy") +
-      item(OVERLAY_COLORS.green, "New urban green from the strategy") +
-      item(OVERLAY_COLORS.grown, "New urban land from growth") +
-      item(OVERLAY_COLORS.retrofit, "Homes retrofitted") +
-      faded,
-  };
-  $("legend").innerHTML = legends[mode];
+  $("legend").innerHTML = legendItems(mode).map(([color, text]) => `<span><i style="background:${color}"></i>${text}</span>`).join("");
   $("legend").classList.toggle("single", mode !== "none");
 }
 renderLegend("none");
@@ -598,10 +610,10 @@ function renderTransitHow() {
 renderTransitHow();
 
 /** Steps the player can jump back to from the transit step. */
-function nudge(text: string, button: string, step: number) {
-  $("transit-nudge").innerHTML = `<span>${text}</span><button class="btn" data-go="${step}">${button}</button>`;
+function nudge(text: string, buttons: [string, number][]) {
+  $("transit-nudge").innerHTML = `<span>${text}</span>${buttons.map(([label, step]) => `<button class="btn" data-go="${step}">${label}</button>`).join("")}`;
   $("transit-nudge").classList.remove("hidden");
-  $("transit-nudge").querySelector("button")!.addEventListener("click", () => setStep(step));
+  $("transit-nudge").querySelectorAll<HTMLButtonElement>("button").forEach((b) => b.addEventListener("click", () => setStep(Number(b.dataset.go))));
 }
 
 function renderTransit() {
@@ -640,9 +652,11 @@ function renderTransit() {
   }
 
   $("transit-nudge").classList.add("hidden");
-  if (newStations.length && popShare <= 0)
-    nudge("Nobody new moves here by 2050, so no new homes gather around the stations.", "← Add growth", 2);
-  else if (newStations.length && current === "BASE") nudge("Baseline ignores new stations and keeps building along roads.", "← Pick a TOD policy", 3);
+  if (!newStations.length) return;
+  if (popShare <= 0) nudge("Nobody new moves here by 2050, so no new homes gather around the stations.", [["← Add growth", 2]]);
+  else if (current === "BASE") nudge("Baseline ignores new stations and keeps building along roads.", [["← Pick a TOD policy", 3]]);
+  // The stations stay when you go back, so the player can try other growth or another policy with them.
+  else nudge("Your stations stay if you go back. Try other growth or another policy with them:", [["← Change growth", 2], ["← Try another policy", 3]]);
 }
 
 function toggleStation(cell: number) {
@@ -1243,6 +1257,7 @@ function showResults() {
         return { principle, got: rows.reduce((a, t) => a + t.points, 0), max: rows.reduce((a, t) => a + t.max, 0) };
       }),
       todScore: [x.todPoints, x.todMax],
+      legends: { none: legendItems("none", newStations.length), changes: legendItems("changes") },
     },
     {
       mount: (el) => city.moveTo(el),

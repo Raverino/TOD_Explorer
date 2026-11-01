@@ -5,7 +5,7 @@ export const SOURCES: string[] = [
   "Brand, C., et al. (2021). The climate change mitigation effects of daily active travel in cities. Transportation Research Part D, 93, 102764.",
   "Brownstone, D., & Golob, T. F. (2009). The impact of residential density on vehicle usage and energy consumption. Journal of Urban Economics, 65(1), 91–98.",
   "Croci, E., Lucchitta, B., & Penati, T. (2021). Low carbon urban strategies: An investigation of 124 European cities. Urban Climate, 40, 101022.",
-  "Dimas, P. (2025). Modeling Transit-Oriented Development: A land-use approach for urban decarbonization. MSc thesis, University of Twente. doi:10.5281/zenodo.16635783",
+  "Dimas, P. (2025). Modeling Transit-Oriented Development: A land-use approach for urban decarbonization. MSc thesis, University of Twente. https://purl.utwente.nl/essays/108255",
   "Eurostat (2023). Average household size, EU-SILC (ilc_lvph01).",
   "Getter, K. L., Rowe, D. B., Robertson, G. P., Cregg, B. M., & Andresen, J. A. (2009). Carbon sequestration potential of extensive green roofs. Environmental Science & Technology, 43(19), 7564–7570.",
   "Hewitt, R., Díaz Pacheco, J., & Moya Gómez, B. (2013). A cellular automata land use model for the R software environment (SIMLANDER).",

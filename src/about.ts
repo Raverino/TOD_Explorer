@@ -1,6 +1,7 @@
 // "How it works": a short slide deck that explains TOD and the game in pictures.
 
 import { CLASSES, STATION_COLOR } from "./classes";
+import { PIN_ICON } from "./voxel";
 
 /** An isometric stack of cubes in the cube-city colours, as inline SVG. */
 export function cubeStack(ground: string, block?: string, roof?: string, blocks = 0, extra = "") {
@@ -43,7 +44,10 @@ const PRINCIPLES: { name: string; text: string; scored: boolean; how: string }[]
   { name: "Shift", text: "Less space for cars, more for people", scored: true, how: "This scores up to 6 points. Less land for roads leaves more room for people. Retrofitting and Balanced turn roads near transit into green streets, and in Custom you choose how many." },
 ];
 
-/** Small person icons for the growth loop. */
+/** A small bar chart for the results step. */
+const bars = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="30" width="12" height="26" fill="#d9534f" stroke="#23262f" stroke-width="2"/><rect x="26" y="18" width="12" height="38" fill="#f5c542" stroke="#23262f" stroke-width="2"/><rect x="44" y="8" width="12" height="48" fill="#6cbf3c" stroke="#23262f" stroke-width="2"/></svg>`;
+
+/** Small person icons. */
 const people = (fill: string, n = 3) =>
   `<svg viewBox="0 0 80 64" aria-hidden="true">${[...Array(n)]
     .map((_, k) => {
@@ -108,14 +112,15 @@ const SLIDES: Slide[] = [
   },
   {
     title: "Growing to 2050",
-    body: "First choose how many people will live here by 2050 (Eurostat's projection for the country, or your own) and how much new land the city may build on. Then pick a policy and press Play: each year the newcomers need homes, and the policy decides where they go. It is a what-if, not a forecast.",
-    visual: `<div class="growth-loop">
-      <div class="g1">${people("#f5c542")}<span><b>1</b> Newcomers need homes</span></div><i class="a12">→</i>
-      <div class="g2"><span class="mini">${cubeStack(c[1].ground, c[1].block, c[1].roof, 4)}</span><span><b>2</b> TOD policies build up near stations first</span></div>
-      <i class="a41">↑</i><div class="hub">↻<small>every year<br>to 2050</small></div><i class="a23">↓</i>
-      <div class="g4">${people("#e3e6dc")}<span><b>4</b> Anyone left over has no home here</span></div><i class="a34">←</i>
-      <div class="g3"><span class="mini">${cubeStack(c[8].ground, c[3].block, c[3].roof, 1)}</span><span><b>3</b> Then new land at the edge, if you allowed it</span></div>
-    </div>`,
+    body: "After you pick a place, the game grows it to 2050 in four steps. Each year the newcomers need homes, and the policy decides where they go: near stations first, then on new land. It is a what-if, not a forecast.",
+    visual: `<div class="game-flow">
+      <div class="f2">${people("#f5c542")}<p><b>2</b><strong>Growth and land</strong><span>How many newcomers by 2050, and how much new land the city may use</span></p></div><i class="fa2">→</i>
+      <div class="f3"><span class="mini">${cubeStack(c[1].ground, c[1].block, c[1].roof, 4)}</span><p><b>3</b><strong>Choose a policy</strong><span>Press Play: each year homes go near stations first, then on new land</span></p></div><i class="fa3">→</i>
+      <div class="f4">${PIN_ICON}<p><b>4</b><strong>New transit</strong><span>Add stations: new homes gather around them</span></p></div><i class="fa4">→</i>
+      <div class="f5">${bars}<p><b>5</b><strong>Results</strong><span>Compare CO₂, homes and the TOD score with Baseline</span></p></div>
+      <div class="back" aria-hidden="true"></div>
+    </div>
+    <p class="back-note">↩ From step 4, go back to change the growth or try another policy.</p>`,
   },
   {
     title: "Your scores",

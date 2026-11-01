@@ -31,6 +31,8 @@ export interface FinalData {
   detailsHtml: string;
   tod: { principle: string; got: number; max: number }[];
   todScore: [number, number];
+  /** what the colours mean, as [colour, label] pairs, for each view of the results */
+  legends: Record<"none" | "changes", [string, string][]>;
 }
 
 /** What the page needs from the 3D city. */
@@ -94,6 +96,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
             <button data-reset>Reset</button>
           </div>
         </div>
+        <div class="report-legend" data-legend></div>
         <p class="viewer-hint"><span class="mouse-only">Drag to turn the city, double-click and drag to move it, Ctrl + scroll or the buttons to zoom.</span><span class="touch-only">One finger turns the city, two fingers move and zoom it.</span> The share image and the PDF use this view.</p>
       </div>
 
@@ -135,7 +138,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
 
       <footer class="report-foot">
         Indicative only: a what-if from open data, not a forecast. Based on Dimas (2025), Modeling Transit-Oriented Development,
-        University of Twente. Map data © OpenStreetMap contributors; population EU Census 2021 grid (© European Union) and GHS-POP R2023A (European Commission JRC).
+        University of Twente (https://purl.utwente.nl/essays/108255). Map data © OpenStreetMap contributors; population EU Census 2021 grid (© European Union) and GHS-POP R2023A (European Commission JRC).
         Made with TOD Explorer on ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.
       </footer>
     </article>
@@ -153,10 +156,17 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
     </div>`;
 
   city.mount(root.querySelector<HTMLElement>("[data-stage]")!);
+  // The legend follows the colours shown, and goes into the PDF and the share image with them.
+  let view: "none" | "changes" = "none";
+  const legend = () =>
+    (root.querySelector("[data-legend]")!.innerHTML = data.legends[view].map(([c, t]) => `<span><i style="background:${c}"></i>${esc(t)}</span>`).join(""));
+  legend();
   root.querySelectorAll<HTMLButtonElement>("[data-ov]").forEach((b) =>
     b.addEventListener("click", () => {
       root.querySelectorAll("[data-ov]").forEach((o) => o.classList.toggle("on", o === b));
-      city.overlay(b.dataset.ov as "none" | "changes");
+      view = b.dataset.ov as "none" | "changes";
+      city.overlay(view);
+      legend();
     }),
   );
   root.querySelectorAll<HTMLButtonElement>("[data-zoom]").forEach((b) => b.addEventListener("click", () => city.zoom(Number(b.dataset.zoom))));
@@ -179,7 +189,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
   let blob: Blob | undefined;
   const out = root.querySelector<HTMLElement>("#share-out")!;
   root.querySelectorAll("[data-share]").forEach((btn) => btn.addEventListener("click", async () => {
-    blob = await shareImage({ ...data, place: place() }, await city.snapshot());
+    blob = await shareImage({ ...data, place: place() }, await city.snapshot(), data.legends[view]);
     out.querySelector("img")!.src = URL.createObjectURL(blob);
     out.classList.remove("hidden");
     const file = new File([blob], "city-of-the-future.png", { type: "image/png" });
@@ -201,7 +211,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
 }
 
 /** Draws a 1080 × 1350 (4:5, the Instagram portrait size) image of the result. */
-async function shareImage(d: FinalData, snapshot: string): Promise<Blob> {
+async function shareImage(d: FinalData, snapshot: string, legend: [string, string][]): Promise<Blob> {
   await document.fonts.ready;
   const W = 1080, H = 1350;
   const canvas = document.createElement("canvas");
@@ -247,7 +257,7 @@ async function shareImage(d: FinalData, snapshot: string): Promise<Blob> {
   g.fillText(tag, W - 60 - tw + 20, 220);
 
   // The cube city, fitted inside a sky-coloured card
-  const cy = 262, ch = 600;
+  const cy = 262, ch = 500;
   box(60, cy, W - 120, ch, 28, "#e3f0f9");
   const img = await loadImage(snapshot);
   const scale = Math.min((W - 160) / img.width, (ch - 40) / img.height);
@@ -259,9 +269,30 @@ async function shareImage(d: FinalData, snapshot: string): Promise<Blob> {
   g.drawImage(img, (W - iw) / 2, cy + (ch - ih) / 2, iw, ih);
   g.restore();
 
+  // What the colours mean: small swatches in rows under the city
+  g.font = body(20, 500);
+  let lx = 60, ly = cy + ch + 40;
+  for (const [color, text] of legend) {
+    const w = 18 + 8 + g.measureText(text).width + 22;
+    if (lx + w > W - 60) {
+      lx = 60;
+      ly += 32;
+    }
+    g.fillStyle = color;
+    g.strokeStyle = ink;
+    g.lineWidth = 2;
+    g.beginPath();
+    g.roundRect(lx, ly - 16, 18, 18, 4);
+    g.fill();
+    g.stroke();
+    g.fillStyle = ink;
+    g.fillText(text, lx + 26, ly);
+    lx += w;
+  }
+
   // Four scores in a 2 × 2 grid
   const tiles = d.metrics.slice(0, 4);
-  const tW = (W - 120 - 24) / 2, tH = 150, ty = cy + ch + 34;
+  const tW = (W - 120 - 24) / 2, tH = 150, ty = ly + 30;
   tiles.forEach((m, k) => {
     const x = 60 + (k % 2) * (tW + 24), y = ty + Math.floor(k / 2) * (tH + 24);
     box(x, y, tW, tH, 22, card);

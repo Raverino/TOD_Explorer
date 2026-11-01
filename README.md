@@ -4,7 +4,7 @@ Turn any place into a colourful cube city and test Transit-Oriented Development 
 
 TOD Explorer is a free, non-commercial web game based on the master's thesis
 *Modeling Transit-Oriented Development: A Land-Use Approach for Urban Decarbonization*
-(Dimas, 2025, University of Twente, [doi:10.5281/zenodo.16635783](https://doi.org/10.5281/zenodo.16635783)).
+(Dimas, 2025, University of Twente, [purl.utwente.nl/essays/108255](https://purl.utwente.nl/essays/108255)).
 It reuses the thesis method (the 10 land-use classes, the scenario and growth algorithms, and the
 transit, housing and carbon indicators) and checks the result against the
 [ITDP TOD Standard (2017)](https://www.itdp.org/library/standards-and-guides/tod3-0/), using free
