@@ -370,7 +370,10 @@ Pushing to `main` builds the site and publishes it to GitHub Pages through
 - TOD metrics: ITDP (2017), *TOD Standard*, 3rd edition.
 - Visual style after the isometric illustrations by Anastasia Logvinenko (2025), used with permission.
 - Indicator references: see the in-app *References and locked assumptions* panel.
+- Built with [Claude](https://claude.ai) (Anthropic) as a coding assistant. The method, data choices,
+  assumptions and checks are the author's.
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+The code is MIT, see [LICENSE](LICENSE). The illustrations in `public/img/` are by Anastasia Logvinenko
+and are not covered by the MIT License: they may not be reused without her permission.
