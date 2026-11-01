@@ -69,7 +69,8 @@ the live results on the city and the TOD score under the panel, so nothing needs
 4. **New transit (optional).** Add rail or metro stations by clicking on the city (the cursor
    becomes a pin), or let the game place 1–5 of them. They appear as red map pins in cubes, each
    labelled with the people within a 1 km walk. TOD strategies build around them and TOD growth
-   moves towards them ("transit first, homes after", Hong Kong). Each new station has its own
+   moves towards them, after Hong Kong's Rail plus Property model, where stations and the
+   buildings around them are planned together. Each new station has its own
    station area: the TOD Standard check scores the main station and every new one and shows the
    best, so a town with no station (score 0) gets a score once one is built. If nobody new moves
    in, or Baseline is picked, the step offers a button back to step 2 or 3.

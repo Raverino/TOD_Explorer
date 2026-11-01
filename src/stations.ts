@@ -1,6 +1,6 @@
-// New rail or metro stations: "transit first, then housing", as in Hong Kong's Rail plus Property
-// model, where the station is planned first and homes and shops are built around it
-// (Cervero & Murakami, 2009).
+// New rail or metro stations, after Hong Kong's Rail plus Property model: the rail company is given
+// the right to develop the land around new stations, builds there with private developers, and the
+// rise in land value helps pay for the line (Cervero & Murakami, 2009).
 
 import { CityModel, TOD_RAPID_M } from "./classify";
 

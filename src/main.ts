@@ -257,6 +257,8 @@ $("next-step").addEventListener("click", () => {
 });
 $("zoom-in").addEventListener("click", () => city.zoomBy(1.3));
 $("zoom-out").addEventListener("click", () => city.zoomBy(1 / 1.3));
+$("turn-left").addEventListener("click", () => city.rotateBy(-Math.PI / 8));
+$("turn-right").addEventListener("click", () => city.rotateBy(Math.PI / 8));
 
 function setOverlay(mode: Overlay) {
   document.querySelectorAll<HTMLButtonElement>("[data-overlay]").forEach((b) => b.classList.toggle("on", b.dataset.overlay === mode));
@@ -513,21 +515,24 @@ function renderGrowthSummary() {
   let urban = 0;
   for (const c of baseModel.cls) if (c >= 1 && c <= 6) urban++;
   const people = baseInd!.population * popShare;
-  const where = trend.national ? "this country" : "the EU (no figure for this country)";
+  const where = trend.national ? "this country" : "the EU";
   const source =
     Math.abs(popShare - trend.share) < 1e-6
-      ? `This is Eurostat's projection for ${where} (EUROPOP2023); cities often grow faster than their country.`
-      : `Eurostat projects ${signed(trend.share * 100, 1)}% for ${where} (EUROPOP2023).`;
+      ? `Eurostat projection for ${where} (EUROPOP2023)`
+      : `Eurostat projects ${signed(trend.share * 100, 1)}% for ${where} (EUROPOP2023)`;
   $("growth-summary").innerHTML =
-    (people >= 1
-      ? `By 2050 <b>${nf(people)} more people</b> live here (${signed(popShare * 100, 1)}% on today's ${nf(baseInd!.population)}) and need homes. `
-      : people <= -1
-        ? `By 2050 <b>${nf(-people)} fewer people</b> live here (${signed(popShare * 100, 1)}%): no new homes are needed. `
-        : "The population stays as it is: no new homes are needed. ") +
-    `${source} ` +
-    (landShare
-      ? `The city may build on up to <b>${nf(Math.round(urban * landShare) * ha)} ha</b> of new land at its edge (${nf(landShare * 100)}% of today's ${nf(urban * ha)} ha of urban land), but only uses it when homes are needed.`
-      : `<b>No new land:</b> every new home has to fit inside today's city.`);
+    `<li>${
+      people >= 1
+        ? `<b>${nf(people)}</b> more people by 2050 need a home.`
+        : people <= -1
+          ? `<b>${nf(-people)}</b> fewer people by 2050: no new homes needed.`
+          : "No change in population: no new homes needed."
+    }<small>${source}</small></li>` +
+    `<li>${
+      landShare
+        ? `Up to <b>${nf(Math.round(urban * landShare) * ha)} ha</b> of new land at the edge, used only when homes are needed.`
+        : `<b>No new land</b>: new homes must fit inside today's city.`
+    }</li>`;
 }
 
 function setYear(y: number) {
@@ -627,8 +632,8 @@ function renderTransit() {
     for (let i = 0; i < people.length; i++) if (model.walkRapidM[i] <= TOD_RAPID_M && baseModel.walkRapidM[i] > TOD_RAPID_M) fresh += people[i];
     const scored = lastResult?.x.todStation;
     $("transit-summary").innerHTML =
-      `<b>${newStations.length} new station${newStations.length > 1 ? "s" : ""}</b>: the label on each pin shows the people within a 1 km walk in ${year}. ` +
-      `${nf(fresh)} of them had no train or metro within walking distance before. ` +
+      `<b>${newStations.length} new station${newStations.length > 1 ? "s" : ""}</b>: the label on each pin shows the people within a 1 km walk in <b>${year}</b>. ` +
+      `<b>${nf(fresh)}</b> of them had no train or metro within walking distance before. ` +
       (scored === "new"
         ? "The TOD score now rates the area of your best new station."
         : baseModel.mainStation
@@ -726,19 +731,24 @@ function run(keepView: boolean) {
   renderTransit();
 }
 
-/** Step 3 in words: how many newcomers have a home by the shown year, and where. */
+/** The housing summary as a sentence, for the results page. */
+let housingText = "";
+
+/**
+ * Step 3: homes still to build by 2050, counting down while the city grows. Only the number and
+ * the bar change from year to year; the reasons appear once the city reaches 2050.
+ */
 function renderHousingSummary(s: Strategy, r: Run, st: YearState) {
   const ha = baseModel!.grid.cellM ** 2 / 10_000;
   const tod = s.id !== "BASE";
   hudHousing = "";
-  if (year === START_YEAR) {
-    $("housing-summary").textContent = "Press Play to watch the city grow to 2050, or move the year.";
-    return;
-  }
-  if (r.sim.newResidents < 1 && st.displaced < 1) {
+  housingText = "";
+  const end = r.sim.years[r.sim.years.length - 1];
+  const totalEnd = end.need + end.displaced;
+  if (r.sim.newResidents < 1 && end.displaced < 1) {
     $("housing-summary").innerHTML =
-      `${r.sim.newResidents <= -1 ? "The population falls" : "The population stays the same"}: no new homes are needed. ` +
-      (tod ? `${s.name} still adds the parks, green streets, shops and retrofits it plans near transit.` : "Baseline leaves the city as it is.");
+      `<p class="summary">${r.sim.newResidents <= -1 ? "The population falls" : "The population stays the same"}: no new homes are needed. ` +
+      `${tod ? `${s.name} still adds the parks, green streets, shops and retrofits it plans near transit.` : "Baseline leaves the city as it is."}</p>`;
     return;
   }
   let farm = 0, green = 0;
@@ -752,34 +762,42 @@ function renderHousingSummary(s: Strategy, r: Run, st: YearState) {
   const housed = Math.min(st.housed, total);
   const short = total - st.housed;
   const unhoused = short >= Math.max(1, total * 0.005);
+  const left = Math.max(0, totalEnd - housed);
+  const done = year === END_YEAR;
+
+  const facts = [`${nf(housed)} of ${nf(totalEnd)} housed`];
+  if (st.housedInside >= 1) facts.push(`${nf(Math.min(st.housedInside, housed))} near transit`);
+  if (st.land) facts.push(`${nf(st.land * ha)} ha new land`);
+  const label = !done ? "Homes still to build by 2050" : unhoused ? "Without a home in 2050" : "Everyone has a home in 2050";
+  const value = !done ? nf(left) : unhoused ? nf(short) : "✓";
+  const small = year === START_YEAR ? "Press Play to watch the city grow, or move the year." : `${year}: ${facts.join(" · ")}`;
+
   // Growth stops early when no free land is left (TOD keeps parks and protected areas free).
   const landFull = !!r.g && st.land >= r.sim.landCells.length && r.sim.landCells.length < r.g.requested;
   const landText = !landShare
     ? "no new land is allowed"
     : landFull
       ? `only ${nf(r.sim.landCells.length * ha)} ha of free land ${tod ? "outside parks and protected areas " : ""}is left in this area`
-      : st.land >= r.sim.landCells.length
-        ? "the new land allowed is used up"
-        : "new land opens a little each year";
-  const insideText = year === END_YEAR ? `${s.name}'s rules are used up` : `${s.name} builds at a steady pace to 2050`;
-  const parts: string[] = [];
-  if (st.housedInside >= 1) parts.push(`${nf(st.housedInside)} by building up near transit`);
-  if (st.land) parts.push(`${nf(st.housedOnLand)} on <b>${nf(st.land * ha)} ha</b> of new land (${nf(farm * ha)} ha of it farmland, ${nf(green * ha)} ha urban green)`);
+      : "the new land allowed is used up";
+  const why = unhoused
+    ? tod
+      ? `${s.name}'s rules are used up and ${landText}. ${landFull ? "Raise the shares in Custom." : "Allow more land in step 2, or raise the shares in Custom."}`
+      : `Baseline only builds on new land, and ${landText}. ${landFull ? "TOD policies can also build up inside the city." : "Allow more land in step 2, or pick a TOD policy."}`
+    : "";
+  const landNote = st.land ? `Orange cubes in <i>Changes</i> show the new land: ${nf(farm * ha)} ha farmland, ${nf(green * ha)} ha urban green.` : "";
+
   $("housing-summary").innerHTML =
-    `By <b>${year}</b>, <b>${nf(housed)}</b> of ${[
-      st.need >= 1 ? `the ${nf(st.need)} newcomers` : "",
-      st.displaced >= 1 ? `${nf(st.displaced)} residents whose homes became shops or parks` : "",
-    ]
-      .filter(Boolean)
-      .join(" and ")} have a home${parts.length ? `: ${parts.join(", and ")}` : ""}.` +
-    (unhoused
-      ? ` <b>${nf(short)} have no home here</b>: ${
-          tod
-            ? `${insideText} and ${landText}. ${landFull ? "Raise the shares in Custom." : "Allow more land in step 2, or raise the shares in Custom."}`
-            : `Baseline only builds on new land, and ${landText}. ${landFull ? "TOD policies can also build up inside the city." : "Allow more land in step 2, or pick a TOD policy."}`
-        }`
-      : "") +
-    (st.land ? " Orange cubes in <i>Changes</i> show the new land." : "");
+    `<div class="countdown${done ? (unhoused ? " short" : " done") : ""}"><span>${label}</span><b>${value}</b>` +
+    `<i><em style="width:${totalEnd ? Math.min(100, (housed / totalEnd) * 100) : 100}%"></em></i><small>${small}</small></div>` +
+    (done && (why || landNote) ? `<p class="housing-why muted">${[why, landNote].filter(Boolean).join(" ")}</p>` : "");
+
+  if (year > START_YEAR) {
+    const parts: string[] = [];
+    if (st.housedInside >= 1) parts.push(`${nf(Math.min(st.housedInside, housed))} by building up near transit`);
+    if (st.land) parts.push(`${nf(st.housedOnLand)} on ${nf(st.land * ha)} ha of new land (${nf(farm * ha)} ha of it farmland, ${nf(green * ha)} ha urban green)`);
+    const who = st.displaced >= 1 ? ` (${nf(st.need)} newcomers and ${nf(st.displaced)} residents whose homes became shops or parks)` : "";
+    housingText = `By ${year}, ${nf(housed)} of the ${nf(total)} people who need a home${who} have one${parts.length ? `: ${parts.join(", and ")}` : ""}.${unhoused ? ` ${nf(short)} have no home here. ${why}` : ""}`;
+  }
   hudHousing = `${nf(housed)} of ${nf(total)} ${st.displaced >= 1 ? "newcomers and displaced" : "newcomers"} housed${unhoused ? ` · ${nf(short)} without a home` : ""}`;
 }
 
@@ -889,7 +907,7 @@ function scoreRows(x: Indicators, b: Indicators | undefined): FinalMetric[] {
             : "Estimated from land use: homes' land, travel and daily life. Lower is better.", ...change(x.co2PerCapita / 1000, b && b.co2PerCapita / 1000, "lower", (v) => `${nf(v, 2)} t`) },
     { label: "Residents near transit", value: pct(x.popStdShare), note: "Can walk to a station or a connecting bus or tram.", ...change(x.popStdShare * 100, b && b.popStdShare * 100, "higher", (v) => `${nf(v, 1)} pts`) },
     { label: "Housing capacity", value: `${nf(x.housingCapacity)} people`, note: "People the homes could house at 40 m² each.", ...change(x.housingCapacity, b?.housingCapacity, "higher", (v) => nf(v)) },
-    { label: "TOD Standard score", value: `${x.todPoints} / ${x.todMax} pts`, note: "TOD Standard metrics open data measures reliably, main station area.", ...change(x.todPoints, b?.todPoints, "higher", (v) => nf(v)) },
+    { label: "TOD Standard score", value: `${x.todPoints} / ${x.todMax} pts`, note: "TOD Standard metrics open data measures reliably, best station area.", ...change(x.todPoints, b?.todPoints, "higher", (v) => nf(v)) },
   ];
 }
 
@@ -1222,7 +1240,7 @@ function showResults() {
       changesHtml: $("strategy-summary").innerHTML,
       transitText: newStations.length ? $("transit-summary").innerHTML : "",
       detailsHtml: $("city-details").innerHTML,
-      growthText: popShare > 0 || landShare ? `${$("growth-summary").innerHTML} ${$("housing-summary").innerHTML}` : "",
+      growthText: popShare > 0 || landShare ? `<ul class="growth-lines">${$("growth-summary").innerHTML}</ul>${housingText ? `<p>${housingText}</p>` : ""}` : "",
       tod: PRINCIPLES.map((principle) => {
         const rows = x.tod.filter((t) => t.principle === principle);
         return { principle, got: rows.reduce((a, t) => a + t.points, 0), max: rows.reduce((a, t) => a + t.max, 0) };
@@ -1232,6 +1250,7 @@ function showResults() {
     {
       mount: (el) => city.moveTo(el),
       zoom: (f) => city.zoomBy(f),
+      rotate: (r) => city.rotateBy(r),
       reset: () => city.resetView(),
       overlay: (mode) => city.setOverlay(mode),
       snapshot: () => trimSnapshot(city.snapshot()),

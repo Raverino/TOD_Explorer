@@ -86,6 +86,8 @@ export class CubeCity {
   private labelLayer = document.createElement("div");
   private pinTops = new Map<number, THREE.Vector3>();
   private pinLabels: { cell: number; el: HTMLElement }[] = [];
+  private touchHint = document.createElement("div");
+  private touchHintTimer = 0;
 
   constructor(private container: HTMLElement, private onHover: (cell: number | null, x: number, y: number) => void) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -98,9 +100,24 @@ export class CubeCity {
     this.controls.enableDamping = true;
     this.controls.maxPolarAngle = Math.PI * 0.45;
     this.controls.screenSpacePanning = false;
-    // Drag turns the city; double-click and drag (or right-drag, Shift + drag, two fingers) moves it.
+    // Drag turns the city; double-click and drag (or right-drag, Shift + drag) moves it.
     this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-    this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+    // On touch screens one finger scrolls the page, as anywhere else; two fingers move and pinch-zoom the
+    // city, and the ↺ ↻ buttons turn it.
+    this.controls.touches = { ONE: null, TWO: THREE.TOUCH.DOLLY_PAN };
+    this.controls.minZoom = 0.5;
+    this.controls.maxZoom = 12;
+    this.renderer.domElement.style.touchAction = "pan-y";
+    this.touchHint.className = "touch-hint";
+    this.touchHint.textContent = "Use two fingers to move the city";
+    container.appendChild(this.touchHint);
+    this.renderer.domElement.addEventListener("pointercancel", (e) => {
+      // The browser took a one-finger swipe to scroll the page: say how to move the city instead.
+      if (e.pointerType !== "touch") return;
+      this.touchHint.classList.add("on");
+      clearTimeout(this.touchHintTimer);
+      this.touchHintTimer = window.setTimeout(() => this.touchHint.classList.remove("on"), 1500);
+    });
     // A press that follows a click within a moment is the second half of a double click: that drag
     // moves the city. Registered for the capture phase so it runs before the controls see the press.
     let lastUp = 0, lastUpAt: [number, number] = [0, 0];
@@ -109,6 +126,8 @@ export class CubeCity {
       (e) => {
         const double = performance.now() - lastUp < 350 && Math.hypot(e.clientX - lastUpAt[0], e.clientY - lastUpAt[1]) < 20;
         this.controls.mouseButtons.LEFT = double ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+        // Pinching zooms; the mouse wheel is handled below.
+        this.controls.enableZoom = e.pointerType === "touch";
       },
       { capture: true },
     );
@@ -154,6 +173,7 @@ export class CubeCity {
     this.container = container;
     container.appendChild(this.renderer.domElement);
     container.appendChild(this.labelLayer);
+    container.appendChild(this.touchHint);
     this.observer.observe(container);
     this.fit();
   }
@@ -315,6 +335,14 @@ export class CubeCity {
   zoomBy(factor: number) {
     this.camera.zoom = Math.max(0.5, Math.min(12, this.camera.zoom * factor));
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Turns the city around its centre of view (for the ↺ ↻ buttons, which touch screens need). */
+  rotateBy(radians: number) {
+    const target = this.controls.target;
+    const offset = this.camera.position.clone().sub(target).applyAxisAngle(new THREE.Vector3(0, 1, 0), radians);
+    this.camera.position.copy(target).add(offset);
+    this.camera.lookAt(target);
   }
 
   setOverlay(mode: Overlay) {

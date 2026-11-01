@@ -588,14 +588,14 @@ function todStandard(m: CityModel, people: Float32Array) {
       value: main ? `${fmt(d1000)} residents/ha` : "no station",
       detail: `target ${TARGET_RESIDENTS_HA} residents per hectare (UN-Habitat, 2014)`,
       points: targetPoints, max: 8,
-      note: `More people near a station means more people who can leave the car at home. Residents per hectare of urban land within a 1000 m walk of the main station (EU census 2021 grid), against UN-Habitat's target of ${TARGET_RESIDENTS_HA}. Points grow in step with density: full points at the target, half at half of it.`,
+      note: `More people near a station means more people who can leave the car at home. Residents per hectare of urban land within a 1000 m walk of the station (EU census 2021 grid), against UN-Habitat's target of ${TARGET_RESIDENTS_HA}. Points grow in step with density: full points at the target, half at half of it.`,
     },
     {
       principle: "Densify", id: "6.A.1", name: "Shops and services by the station",
       value: !main ? "no station" : busierThanCity && peaksAtStation ? "busiest by the station" : busierThanCity ? "busier than the city" : "quieter than the city",
       detail: main ? `share of cubes with shops, cafés, offices or services: ${pct(a500)} within 500 m, ${pct(a1000)} within 1000 m, ${pct(city)} in the built-up city` : undefined,
       points: (busierThanCity ? 4 : 0) + (peaksAtStation ? 3 : 0), max: 7,
-      note: "Stations work best when people also travel to them for work and shopping, so trains are full in both directions and all day. Counts the cubes with shops, cafés, offices or public services on the map (OpenStreetMap). 4 points when the 1000 m walk around the main station has more of them than the built-up city today, 3 more when they are densest within 500 m.",
+      note: "Stations work best when people also travel to them for work and shopping, so trains are full in both directions and all day. Counts the cubes with shops, cafés, offices or public services on the map (OpenStreetMap). 4 points when the 1000 m walk around the station has more of them than the built-up city today, 3 more when they are densest within 500 m.",
     },
     {
       principle: "Compact", id: "7.A.1", name: "Building inside the city",

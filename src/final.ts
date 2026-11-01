@@ -38,6 +38,7 @@ export interface CityHooks {
   /** moves the live 3D view into the element */
   mount: (el: HTMLElement) => void;
   zoom: (factor: number) => void;
+  rotate: (radians: number) => void;
   reset: () => void;
   overlay: (mode: "none" | "changes") => void;
   /** the current view as a PNG data URL, cropped to the city */
@@ -88,10 +89,12 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
           <div class="seg" role="group" aria-label="Zoom">
             <button data-zoom="1.25" aria-label="Zoom in">+</button>
             <button data-zoom="0.8" aria-label="Zoom out">−</button>
+            <button data-turn="-0.3927" aria-label="Turn left">↺</button>
+            <button data-turn="0.3927" aria-label="Turn right">↻</button>
             <button data-reset>Reset</button>
           </div>
         </div>
-        <p class="viewer-hint">Drag to turn the city, double-click and drag to move it, Ctrl + scroll or the buttons to zoom. The share image and the PDF use this view.</p>
+        <p class="viewer-hint"><span class="mouse-only">Drag to turn the city, double-click and drag to move it, Ctrl + scroll or the buttons to zoom.</span><span class="touch-only">Two fingers move and zoom the city; ↺ ↻ turn it.</span> The share image and the PDF use this view.</p>
       </div>
 
       <div class="report-cards">
@@ -117,7 +120,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
         <summary>All the details</summary>
         <h3>What changed</h3>
         <div class="summary">${data.changesHtml}</div>
-        ${data.growthText ? `<p class="summary">${data.growthText}</p>` : ""}
+        ${data.growthText ? `<div class="summary">${data.growthText}</div>` : ""}
         ${data.transitText ? `<h3>New transit</h3><p class="summary">${data.transitText}</p>` : ""}
         <h3>TOD Standard: ${data.todScore[0]} of ${data.todScore[1]} points</h3>
         <div class="principle-bars">
@@ -157,6 +160,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
     }),
   );
   root.querySelectorAll<HTMLButtonElement>("[data-zoom]").forEach((b) => b.addEventListener("click", () => city.zoom(Number(b.dataset.zoom))));
+  root.querySelectorAll<HTMLButtonElement>("[data-turn]").forEach((b) => b.addEventListener("click", () => city.rotate(Number(b.dataset.turn))));
   root.querySelector("[data-reset]")!.addEventListener("click", city.reset);
 
   const place = () => root.querySelector<HTMLInputElement>("#final-place")!.value.trim() || "My city";

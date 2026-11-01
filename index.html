@@ -57,9 +57,11 @@
               <button data-overlay="zoning">Protected</button>
               <button data-overlay="changes">Changes</button>
             </div>
-            <div class="seg" role="group" aria-label="Zoom">
+            <div class="seg" role="group" aria-label="Zoom and turn">
               <button id="zoom-in" aria-label="Zoom in">+</button>
               <button id="zoom-out" aria-label="Zoom out">−</button>
+              <button id="turn-left" aria-label="Turn left">↺</button>
+              <button id="turn-right" aria-label="Turn right">↻</button>
             </div>
             <span id="wheel-hint" class="hint">Drag to turn · double-click and drag to move · Ctrl + scroll to zoom</span>
           </div>
@@ -91,7 +93,7 @@
               <input id="land-share" type="range" min="0" max="40" step="1" value="0" />
             </label>
           </div>
-          <p id="growth-summary" class="summary"></p>
+          <ul id="growth-summary" class="growth-lines"></ul>
         </section>
 
         <section class="strategy panel-step hidden" data-panel="3">
@@ -105,7 +107,7 @@
             <input id="year" type="range" min="2025" max="2050" step="1" value="2025" aria-label="Year" />
             <b id="year-out" class="year">2025</b>
           </div>
-          <p id="housing-summary" class="summary"></p>
+          <div id="housing-summary"></div>
           <div id="strategies" class="strategy-cards" role="radiogroup" aria-label="Policy"></div>
           <div id="custom" class="custom hidden">
             <div class="custom-grid">
@@ -135,12 +137,12 @@
           <div class="strategy-head">
             <span class="kicker">Step 4 of 5 · optional</span>
             <h2>New transit</h2>
-            <p class="muted"><b>Transit first, homes after.</b> Hong Kong builds the station before the neighbourhood, then homes and shops around it.</p>
+            <p class="muted"><b>Stations and homes planned together.</b> In Hong Kong, new stations and the homes and shops around them are planned together, and the land helps pay for the railway.</p>
           </div>
           <div id="transit-how" class="transit-how"></div>
           <div class="transit-controls">
             <button id="place-station" class="btn primary">Place stations</button>
-            <span class="or muted small">or</span>
+            <span class="or muted small">or let the game choose</span>
             <span class="auto-place">
               <select id="auto-count" aria-label="Number of stations to place">
                 <option value="1">1 station</option><option value="2" selected>2 stations</option><option value="3">3 stations</option><option value="4">4 stations</option><option value="5">5 stations</option>

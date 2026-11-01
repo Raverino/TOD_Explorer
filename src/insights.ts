@@ -151,8 +151,8 @@ export function explain(d: ExplainInput): { insights: Insight[]; questions: Ques
   if (d.newStations)
     insights.push({
       tone: "good",
-      title: "Transit first, homes after",
-      text: `You added ${d.newStations} rail or metro station${d.newStations > 1 ? "s" : ""}. Hong Kong works this way: the rail company plans the station first and builds homes, offices and shops on and around it, so new neighbourhoods are walkable to transit from the first day instead of being served by roads. In this game, TOD strategies build around the new stations and TOD growth moves towards them.`,
+      title: "Stations and homes planned together",
+      text: `You added ${d.newStations} rail or metro station${d.newStations > 1 ? "s" : ""}. In Hong Kong, the rail company is given the right to develop the land around new stations and builds homes, offices and shops there with private developers. Rail and buildings are planned together, and the rise in land value helps pay for the line. In this game, TOD strategies build around the new stations and TOD growth moves towards them.`,
       cite: "Cervero & Murakami, 2009",
     });
   if (d.grows)
