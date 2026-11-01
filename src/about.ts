@@ -31,17 +31,26 @@ export function classCube(id: number) {
 
 const pole = `<rect x="54" y="78" width="7" height="30" fill="${STATION_COLOR}" stroke="rgba(0,0,0,.3)"/>`;
 
-/** The eight TOD Standard principles; the game scores six of them (`points` is their maximum in the game). */
-const PRINCIPLES: { name: string; text: string; points?: string; how: string }[] = [
-  { name: "Walk", text: "Safe, lively streets for walking", how: "Not scored in this game: sidewalks and crossings are mapped too unevenly across Europe to measure fairly." },
-  { name: "Cycle", text: "A safe cycle network and parking", how: "Not scored in this game: cycle lanes and bike parking are mapped too unevenly across Europe to measure fairly." },
-  { name: "Connect", text: "Short blocks and direct routes", points: "10 points", how: "Full points when 90% of the block sides within a 1 km walk of the station are shorter than 110 m, 2 points up to 190 m. Policies do not change streets, so this depends on where the station is: place a new station in step 4 in an area of short, well-connected streets." },
-  { name: "Transit", text: "Good public transport within walking distance", points: "must pass", how: "At least 80% of residents need a train, metro or rapid-bus station within a 1000 m walk, or a bus or tram stop within 500 m. It earns no points, but every TOD has to pass it. Add stations in step 4 where people live." },
-  { name: "Mix", text: "Homes, shops and services close together", points: "4 points", how: "1 point each for fresh food within 500 m, a school within 1000 m and health care within 1000 m, when 80% of the buildings near the station reach them. 1 more for a park or playground within 500 m: Retrofitting and Balanced add parks and green streets near transit." },
-  { name: "Densify", text: "Enough people and jobs near stations", points: "15 points", how: "Up to 8 points for residents within a 1 km walk of the station, full at 150 per hectare: Intense Building and Balanced build up homes near transit. 7 more when the station area has more shops and offices than the city, most of them within 500 m: turning shops into homes (Retrofitting) can cost these." },
-  { name: "Compact", text: "Build in and next to the existing city", points: "10 points", how: "Up to 8 points when most of the buildable land within a 1 km walk of the station is already built (full above 90%): a station in the built-up city scores higher than one at its edge. 2 more for a bike-share station within 1 km, or 1 for bus or tram stops." },
-  { name: "Shift", text: "Less space for cars, more for people", points: "6 points", how: "Full points when roads cover 15% or less of the land within a 1 km walk of the station, 3 points up to 20%. Retrofitting and Balanced turn roads near transit into green streets, and in Custom you set the share." },
+/** The eight TOD Standard principles; the game scores six of them. `how` says, in plain words, what each scores in the game. */
+const PRINCIPLES: { name: string; text: string; scored: boolean; how: string }[] = [
+  { name: "Walk", text: "Safe, lively streets for walking", scored: false, how: "This is not scored in the game. Good sidewalks and safe crossings matter, but open maps record them too unevenly across Europe to compare places fairly." },
+  { name: "Cycle", text: "A safe cycle network and parking", scored: false, how: "This is not scored in the game. Cycle lanes and bike parking matter, but open maps record them too unevenly across Europe to compare places fairly." },
+  { name: "Connect", text: "Short blocks and direct routes", scored: true, how: "This scores up to 10 points. Short blocks give people many direct routes on foot. Policies do not change the streets, so it depends on where the station is: try a new station in an area of small blocks." },
+  { name: "Transit", text: "Good public transport within walking distance", scored: true, how: "This scores no points, but every TOD has to pass it. Most residents need a station, bus or tram stop within walking distance. Add stations in step 4 where many people live." },
+  { name: "Mix", text: "Homes, shops and services close together", scored: true, how: "This scores up to 4 points. People should reach food shops, schools, doctors and a park on foot. Shops and schools come from the map, so policies change only the park point: Retrofitting and Balanced add parks." },
+  { name: "Densify", text: "Enough people and jobs near stations", scored: true, how: "This scores up to 15 points. It wants many residents near the station, and more shops and offices there than in the rest of the city. Intense Building and Balanced add homes; turning shops into homes can lower it." },
+  { name: "Compact", text: "Build in and next to the existing city", scored: true, how: "This scores up to 10 points. The land around the station should already be built on, not fields, with bike share or buses nearby. Policies change little here: a station inside the city scores higher than one at its edge." },
+  { name: "Shift", text: "Less space for cars, more for people", scored: true, how: "This scores up to 6 points. Less land for roads leaves more room for people. Retrofitting and Balanced turn roads near transit into green streets, and in Custom you choose how many." },
 ];
+
+/** Small person icons for the growth loop. */
+const people = (fill: string, n = 3) =>
+  `<svg viewBox="0 0 80 64" aria-hidden="true">${[...Array(n)]
+    .map((_, k) => {
+      const x = 40 + (k - (n - 1) / 2) * 22;
+      return `<circle cx="${x}" cy="24" r="8" fill="${fill}" stroke="#23262f" stroke-width="2"/><path d="M${x - 11} 56 a11 13 0 0 1 22 0 Z" fill="${fill}" stroke="#23262f" stroke-width="2"/>`;
+    })
+    .join("")}</svg>`;
 
 interface Slide {
   title: string;
@@ -68,9 +77,10 @@ const SLIDES: Slide[] = [
   },
   {
     title: "Eight principles",
-    body: "The TOD Standard (ITDP, 2017) judges station areas on eight principles. The thesis that inspired this game studied four of them; the game scores six, marked in yellow, using what free, Europe-wide open data measures reliably: 45 of the 100 points. Tap a principle to see how to score it.",
-    visual: `<div class="principles">${PRINCIPLES.map((p, k) => `<button data-principle="${k}" class="${p.points ? "on" : ""}"><b>${p.name}</b><span>${p.text}</span></button>`).join("")}</div>
-      <div class="principle-tip" aria-live="polite">Tap a principle to see how it is scored in the game.</div>`,
+    body: "The TOD Standard (ITDP, 2017) judges station areas on eight principles. The thesis that inspired this game studied four of them; the game scores six, marked in yellow, using what free, Europe-wide open data measures reliably: 45 of the 100 points.",
+    visual: `<p class="tap-hint">Tap a principle to see what it scores</p>
+      <div class="principles">${PRINCIPLES.map((p, k) => `<button data-principle="${k}" class="${p.scored ? "on" : ""}${k === 2 ? " sel" : ""}"><b>${p.name}</b><span>${p.text}</span></button>`).join("")}</div>
+      <p class="principle-tip" aria-live="polite"><b>${PRINCIPLES[2].name}.</b> ${PRINCIPLES[2].how}</p>`,
   },
   {
     title: "Reading the cube city",
@@ -99,11 +109,12 @@ const SLIDES: Slide[] = [
   {
     title: "Growing to 2050",
     body: "First choose how many people will live here by 2050 (Eurostat's projection for the country, or your own) and how much new land the city may build on. Then pick a policy and press Play: each year the newcomers need homes, and the policy decides where they go. It is a what-if, not a forecast.",
-    visual: `<div class="steps-row">
-      <div><b>1</b><span>New residents need homes each year</span></div><i>→</i>
-      <div><b>2</b><span>TOD policies build up near transit first, at a steady pace</span></div><i>→</i>
-      <div><b>3</b><span>Then new land at the edge, up to what you allowed, near roads or transit</span></div><i>→</i>
-      <div><b>4</b><span>Anyone left over has no home here</span></div>
+    visual: `<div class="growth-loop">
+      <div class="g1">${people("#f5c542")}<span><b>1</b> Newcomers need homes</span></div><i class="a12">→</i>
+      <div class="g2"><span class="mini">${cubeStack(c[1].ground, c[1].block, c[1].roof, 4)}</span><span><b>2</b> TOD policies build up near stations first</span></div>
+      <i class="a41">↑</i><div class="hub">↻<small>every year<br>to 2050</small></div><i class="a23">↓</i>
+      <div class="g4">${people("#e3e6dc")}<span><b>4</b> Anyone left over has no home here</span></div><i class="a34">←</i>
+      <div class="g3"><span class="mini">${cubeStack(c[8].ground, c[3].block, c[3].roof, 1)}</span><span><b>3</b> Then new land at the edge, if you allowed it</span></div>
     </div>`,
   },
   {
@@ -149,7 +160,7 @@ export function renderAbout(container: HTMLElement, onStart: () => void) {
       b.addEventListener("click", () => {
         const p = PRINCIPLES[Number(b.dataset.principle)];
         slide.querySelectorAll("[data-principle]").forEach((o) => o.classList.toggle("sel", o === b));
-        slide.querySelector(".principle-tip")!.innerHTML = `<b>${p.name}</b>${p.points ? ` <span class="pts">${p.points}</span>` : ` <span class="pts off">not scored</span>`}<p>${p.how}</p>`;
+        slide.querySelector(".principle-tip")!.innerHTML = `<b>${p.name}.</b> ${p.how}`;
       }),
     );
     // A strategy picture opens its labelled version; the back button returns to the grid.
