@@ -7,6 +7,7 @@ import { fetchPopulation } from "./population";
 import { DATA_SOURCES, SOURCES } from "./sources";
 import { classCube, cubeStack, renderAbout } from "./about";
 import { FinalMetric, renderFinal, trimSnapshot } from "./final";
+import { startCounting, track } from "./analytics";
 import { explain, Housing, referencesFor } from "./insights";
 import { fetchTerrain } from "./elevation";
 import { CityModel, classify, TOD_BUS_M, TOD_RAPID_M, withStations } from "./classify";
@@ -210,6 +211,7 @@ $("build").addEventListener("click", async () => {
     transitCache = undefined;
     renderTransit();
     if (import.meta.env.DEV) Object.assign(window, { __debug: { model, mapData } });
+    track("city-built");
     setStep(2);
     $("final").innerHTML = "";
     status("Stacking cubes…");
@@ -303,6 +305,7 @@ function renderLegend(mode: Overlay) {
   $("legend").classList.toggle("single", mode !== "none");
 }
 renderLegend("none");
+startCounting();
 
 // ---------- Step 3: choose a strategy ----------
 
@@ -338,6 +341,7 @@ function renderStrategyCards() {
   document.querySelectorAll<HTMLButtonElement>("[data-strategy]").forEach((b) =>
     b.addEventListener("click", () => {
       selectStrategy(b.dataset.strategy!);
+      track(`policy-${b.dataset.strategy!.toLowerCase()}`);
     }),
   );
 }
@@ -1281,4 +1285,5 @@ function showResults() {
   setOverlay("none");
   setStep(5);
   city.fit();
+  track(newStations.length ? "results-with-stations" : "results");
 }

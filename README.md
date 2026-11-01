@@ -358,6 +358,13 @@ npm run dev
 Pushing to `main` builds the site and publishes it to GitHub Pages through
 `.github/workflows/deploy.yml`. In the repository settings, set **Pages → Source** to **GitHub Actions**.
 
+## Visitor counting
+
+The site counts visits with [GoatCounter](https://www.goatcounter.com): no cookies and no personal data.
+Besides page views it records a few named events: `city-built`, `policy-<id>` (base, ib, retro, bal,
+custom), `results` or `results-with-stations`, `pdf` and `share-image`. Place names are not recorded.
+The endpoint is set in [src/analytics.ts](src/analytics.ts); counting is off on the local dev server.
+
 ## Data and credits
 
 - Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL.

@@ -1,6 +1,7 @@
 // Step 5: the results page, printable as a PDF report, plus a square-ish share image for social media.
 
 import type { Insight, Question } from "./insights";
+import { track } from "./analytics";
 
 export interface FinalMetric {
   label: string;
@@ -179,6 +180,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
   const place = () => root.querySelector<HTMLInputElement>("#final-place")!.value.trim() || "My city";
   root.querySelector("[data-back]")!.addEventListener("click", onBack);
   root.querySelector("[data-pdf]")!.addEventListener("click", () => {
+    track("pdf");
     // The browser's print dialog saves the report as a PDF; the print styles show only the report,
     // with a still picture of the current view in place of the live 3D city.
     root.querySelector<HTMLImageElement>(".print-snap")!.src = city.snapshotNow();
@@ -193,6 +195,7 @@ export function renderFinal(root: HTMLElement, data: FinalData, city: CityHooks,
   const out = root.querySelector<HTMLElement>("#share-out")!;
   root.querySelectorAll("[data-share]").forEach((btn) => btn.addEventListener("click", async () => {
     blob = await shareImage({ ...data, place: place() }, await city.snapshot(), data.legends[view]);
+    track("share-image");
     out.querySelector("img")!.src = URL.createObjectURL(blob);
     out.classList.remove("hidden");
     const file = new File([blob], "city-of-the-future.png", { type: "image/png" });
