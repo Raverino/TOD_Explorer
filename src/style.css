@@ -416,7 +416,7 @@ footer { font-size: 12px; color: var(--muted); padding: 12px 20px; border-top: 3
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff; }
-  header.top, footer, .final-bar, .share-out, #pick, #city, #about, #loading { display: none !important; }
+  header.top, body > footer, .final-bar, .share-out, #pick, #city, #about, #loading { display: none !important; }
   #final { padding: 0; }
   .report { border: 0; box-shadow: none; padding: 0; max-width: none; }
   .report h1 input { border: 0; }
@@ -487,6 +487,14 @@ footer { font-size: 12px; color: var(--muted); padding: 12px 20px; border-top: 3
   .report summary, .report h2, .report h3 { break-after: avoid; }
   .final-details .headlines { display: block; }
   .final-details .headline { box-shadow: none; margin-bottom: 12px; break-inside: avoid; }
+  /* PDF: each section starts on a new page, and no card, score item, table row or note is split across two pages. */
+  .report > section:has(.insights), .report > details.more, #final .final-details,
+  #final .tod-standard, #final .final-details > .note, #final details.refs { break-before: page; }
+  #final .insight, #final .headline, #final .metric, #final .tod-head, #final .group, #final tr,
+  #final .summary, #final .principle-bars, #final .note, #final .report-card, #final .sources li { break-inside: avoid; }
+  #final .principle-head, #final h3, #final h4 { break-after: avoid; }
+  #final .final-details .details { display: block; columns: 2; column-gap: 16px; }
+  #final .final-details .group { display: block; margin: 0 0 16px; }
   .viewer-stage, .viewer-ui, .viewer-hint { display: none !important; }
   .print-snap { display: block; width: 100%; max-height: 110mm; object-fit: contain; }
   .insight, .report-card { break-inside: avoid; }
