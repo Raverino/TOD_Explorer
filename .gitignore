@@ -1,3 +1,13 @@
 node_modules
 dist
 .DS_Store
+
+# Output of the helper scripts in tools/
+tools/carousel/shots/
+tools/carousel/out/
+tools/out/
+__pycache__/
+
+# Private notes, kept only on this computer
+CLAUDE.md
+tools/carousel/*.txt

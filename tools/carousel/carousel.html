@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TOD Explorer carousel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef5e6; --card: #ffffff; --ink: #23262f; --muted: #646a78; --line: #d9dfd0;
+    --grass: #6cbf3c; --grass-dark: #4c9a27; --sky: #e3f0f9; --sun: #f5c542; --brick: #d9534f;
+    --head: "Fredoka", system-ui, sans-serif; --body: "Inter", system-ui, sans-serif;
+  }
+  @page { size: 1080px 1350px; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #999; }
+  body { font-family: var(--body); color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide {
+    width: 1080px; height: 1350px; background: var(--bg); position: relative; overflow: hidden;
+    padding: 84px 84px 120px; display: flex; flex-direction: column; gap: 30px; break-after: page;
+  }
+  .top { display: flex; align-items: center; gap: 14px; font: 600 26px var(--head); }
+  .logo { width: 40px; height: 40px; border-radius: 9px; background: var(--grass); box-shadow: inset -9px -9px 0 var(--grass-dark), inset 9px 9px 0 #9fd36a; }
+  .top .num { margin-left: auto; font: 600 22px var(--body); color: var(--muted); }
+  .kicker { font: 600 24px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font: 600 88px/1.02 var(--head); margin: 0; letter-spacing: -0.01em; }
+  h2 { font: 600 68px/1.05 var(--head); margin: 0; }
+  p { font-size: 34px; line-height: 1.4; margin: 0; }
+  p.small { font-size: 22px; color: var(--muted); }
+  .step { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 14px; background: var(--sun); border: 4px solid var(--ink); font: 600 36px var(--head); margin-right: 14px; vertical-align: 8px; }
+  .card { background: var(--card); border: 4px solid var(--ink); border-radius: 28px; box-shadow: 0 10px 0 var(--ink); overflow: hidden; }
+  .shot { flex: 1; min-height: 0; background-repeat: no-repeat; }
+  .chips { display: flex; flex-wrap: wrap; gap: 12px; }
+  .chips span { font: 600 26px var(--body); padding: 10px 22px; border-radius: 999px; background: var(--card); border: 3px solid var(--ink); }
+  .chips span.base { background: #e4e6ea; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 26px; font-size: 24px; }
+  .legend i { display: inline-block; width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--ink); vertical-align: -4px; margin-right: 8px; }
+  .swipe { position: absolute; right: 84px; bottom: 60px; font: 600 30px var(--head); background: var(--sun); border: 4px solid var(--ink); border-radius: 999px; padding: 12px 30px; box-shadow: 0 6px 0 var(--ink); }
+  .foot { position: absolute; left: 84px; bottom: 60px; font-size: 22px; color: var(--muted); }
+  .dots { position: absolute; left: 50%; bottom: 52px; transform: translateX(-50%); display: flex; gap: 10px; }
+  .dots b { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); background: transparent; }
+  .dots b.on { background: var(--ink); }
+  /* Slide 1 */
+  .cover-city { flex: 1; min-height: 0; background: url(shots/07-city.png) center / contain no-repeat; margin: 0 -40px; }
+  /* Slide 2 */
+  .rome { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .rome figure { margin: 0; }
+  .rome img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; border-radius: 20px; border: 4px solid var(--ink); background: #fff; }
+  .rome figcaption { font: 600 28px var(--head); text-align: center; margin-top: 12px; }
+  .screen { width: 100%; height: auto; display: block; }
+  .panel { height: 0; flex: 1; width: auto; align-self: center; display: block; }
+  .rome-rows { display: grid; gap: 18px; }
+  .rome-rows > div { display: grid; grid-template-columns: 210px 1fr; gap: 28px; align-items: center; }
+  .rome-rows img { width: 210px; height: 210px; object-fit: cover; border-radius: 20px; border: 4px solid var(--ink); display: block; }
+  .rome-rows p { font-size: 30px; line-height: 1.35; }
+  .rome-rows b { display: block; font: 600 38px var(--head); margin-bottom: 4px; }
+  /* Slide 7 */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  .stat { padding: 30px 32px; }
+  .stat span { font-size: 26px; color: var(--muted); }
+  .stat b { display: block; font: 600 64px var(--head); margin: 8px 0 14px; }
+  .delta { display: inline-block; font: 600 26px var(--body); padding: 6px 18px; border-radius: 999px; }
+  .delta.good { background: #e3f4d6; color: #2f6d12; }
+  .delta.bad { background: #fbe1df; color: #a1302b; }
+  /* Slide 8 */
+  .url { padding: 40px 44px; background: var(--sun); }
+  .url b { font: 600 46px var(--head); display: block; white-space: nowrap; margin-bottom: 8px; }
+  .url span { font: 600 28px var(--body); }
+  .credits { margin-top: auto; font-size: 22px; line-height: 1.5; color: var(--muted); }
+  @media screen { body { display: grid; gap: 40px; justify-content: center; padding: 40px 0; } }
+</style>
+</head>
+<body>
+
+<!-- 1. Cover -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer</div>
+  <p class="kicker">A free web game · from my MSc thesis</p>
+  <h1>What if your city grew around its train stations?</h1>
+  <p>Turn any place in Europe into a cube city, pick a policy, and watch it grow to 2050.</p>
+  <div class="cover-city" role="img" aria-label="Utrecht as a cube city"></div>
+  <div class="swipe">Swipe →</div>
+</section>
+
+<!-- 2. Where it comes from -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer<span class="num">2 / 8</span></div>
+  <h2>It started with Rome.</h2>
+  <p>For my master's thesis at the University of Twente, I modelled how Rome could grow by 2050 under three Transit-Oriented Development strategies.</p>
+  <div class="rome-rows">
+    <div><img src="../../public/img/ib-labels.jpg" alt=""><p><b>Intense Building</b>Taller homes and local shops around the stations</p></div>
+    <div><img src="../../public/img/retro-labels.jpg" alt=""><p><b>Retrofitting</b>Industry, parking and roads become homes and green space</p></div>
+    <div><img src="../../public/img/bal-labels.jpg" alt=""><p><b>Balanced</b>A bit of both: moderate density, mixed use, greener streets</p></div>
+  </div>
+  <p>One question stayed with me: <b>what would this look like in other cities?</b> So I turned it into a game.</p>
+  <p class="small">Illustrations: Anastasia Logvinenko</p>
+</section>
+
+<!-- 3. Steps 1 and 2 -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer<span class="num">3 / 8</span></div>
+  <h2><span class="step">1</span>Pick a place<br><span class="step">2</span>Set the growth</h2>
+  <p>Search any place in Europe. Free open data builds it in seconds: buildings and land use from OpenStreetMap, people from the EU Census 2021, growth from Eurostat's projection to 2050.</p>
+  <img class="card screen" src="shots/c-growth.png" alt="Step 2 in the game">
+</section>
+
+<!-- 4. Step 3 -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer<span class="num">4 / 8</span></div>
+  <h2><span class="step">3</span>Pick a policy, press Play</h2>
+  <p>Each year the newcomers need homes. The policy decides where they go: near stations first, then on new land.</p>
+  <div class="chips"><span class="base">Baseline</span><span>Intense Building</span><span>Retrofitting</span><span>Balanced</span><span>Custom</span></div>
+  <img class="card screen" src="shots/c-changes.png" alt="Step 3 with the Changes view">
+  <div class="legend">
+    <span><i style="background:#ff1f8f"></i>New land use</span>
+    <span><i style="background:#19c24a"></i>New urban green</span>
+    <span><i style="background:#ff9a00"></i>Growth on new land</span>
+    <span><i style="background:#2f80ed"></i>Homes retrofitted</span>
+  </div>
+</section>
+
+<!-- 5. Step 4 -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer<span class="num">5 / 8</span></div>
+  <h2><span class="step">4</span>Add new stations</h2>
+  <p>Place them yourself, or let the game put them where the city will grow. Then go back: your stations stay, and TOD growth moves towards them.</p>
+  <img class="card panel" src="shots/c-transit.png" alt="The New transit step">
+</section>
+
+<!-- 6. Step 5 -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer<span class="num">6 / 8</span></div>
+  <h2><span class="step">5</span>See what changed</h2>
+  <p>CO₂ per resident, residents near transit, homes, and a score on the TOD Standard (ITDP): the six principles open data can measure.</p>
+  <div class="shot" style="background-image:url(shots/08-share.png); background-size: contain; background-position: center;"></div>
+</section>
+
+<!-- 7. Trade-offs -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer<span class="num">7 / 8</span></div>
+  <h2>The numbers don't always agree.</h2>
+  <p>When I tested Utrecht with the Balanced policy, against Baseline in 2050:</p>
+  <div class="stats">
+    <div class="card stat"><span>CO₂ per resident</span><b>1.64 t/yr</b><span class="delta good">▼ 81 kg less</span></div>
+    <div class="card stat"><span>Housing capacity</span><b>147,862</b><span class="delta bad">▼ 1,036 fewer people</span></div>
+  </div>
+  <p>Lower emissions per person, but room for fewer people. Sustainable cities are full of trade-offs like this, and I think seeing them helps more than hiding them.</p>
+  <p class="small">A what-if from open data, not a forecast.</p>
+  <div class="cover-city"></div>
+</section>
+
+<!-- 8. Call to action -->
+<section class="slide">
+  <div class="top"><span class="logo"></span>TOD Explorer<span class="num">8 / 8</span></div>
+  <h2>Try it with your city.</h2>
+  <div class="card url"><b>raverino.github.io/TOD_Explorer</b><span>Free · no sign-up · works on your phone</span></div>
+  <p>Share your result with <b>#CityOfTheFuture</b>. I would love to see which city you picked.</p>
+  <div class="cover-city" style="flex: 0 0 380px;"></div>
+  <p class="credits">Based on Dimas (2025), <i>Modeling Transit-Oriented Development</i>, University of Twente. Visual style after Anastasia Logvinenko. Data © OpenStreetMap contributors, EU Census 2021, Eurostat EUROPOP2023. TOD Standard: ITDP (2017).</p>
+</section>
+
+</body>
+</html>
